@@ -1,4 +1,4 @@
-const mockPlaces = [
+const MOCKPLACES = [
   {
     id: 'p1',
     title: 'Empire State Building',
@@ -27,12 +27,12 @@ const mockPlaces = [
   },
 ];
 
+const { v4: uuidv4 } = require('uuid');
 const HttpError = require('../models/http-error');
-
 
 const getPlaceById = (req, res, next) => {
   const placeId = req.params.placeId;
-  const place = mockPlaces.find((place) => placeId === place.id);
+  const place = MOCKPLACES.find((place) => placeId === place.id);
 
   if (!place) {
     throw new HttpError(404, 'No place with provided id exists');
@@ -43,7 +43,7 @@ const getPlaceById = (req, res, next) => {
 
 const getPlacesByUserId = (req, res, next) => {
   const userId = req.params.userId;
-  const placesByUser = mockPlaces.filter((place) => place.creator === userId);
+  const placesByUser = MOCKPLACES.filter((place) => place.creator === userId);
 
   if (!placesByUser) {
     throw new HttpError(404, 'No place for provided user id exists');
@@ -51,5 +51,23 @@ const getPlacesByUserId = (req, res, next) => {
   res.json({ places: placesByUser });
 };
 
+const createPlace = (req, res, next) => {
+  const { title, description, coordinates, address, creator } = req.body;
+
+  const newPlace = {
+    id: uuidv4(),
+    title,
+    description,
+    location: coordinates,
+    address,
+    creator,
+  };
+
+  MOCKPLACES.push(newPlace);
+
+  res.status(201).json({ place: newPlace });
+};
+
 exports.getPlaceById = getPlaceById;
 exports.getPlacesByUserId = getPlacesByUserId;
+exports.createPlace = createPlace;
