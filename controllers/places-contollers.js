@@ -1,4 +1,4 @@
-const MOCKPLACES = [
+let MOCKPLACES = [
   {
     id: 'p1',
     title: 'Empire State Building',
@@ -68,6 +68,28 @@ const createPlace = (req, res, next) => {
   res.status(201).json({ place: newPlace });
 };
 
+const updatePlace = (req, res, next) => {
+  const placeId = req.params.placeId;
+  const placeToUpdate = { ...MOCKPLACES.find((place) => place.id === placeId) };
+  const index = MOCKPLACES.findIndex((place) => place.id === placeId);
+
+  placeToUpdate.title = req.body.title;
+  placeToUpdate.description = req.body.description;
+
+  MOCKPLACES[index] = placeToUpdate;
+
+  res.status(200).json({ updatedPlace: placeToUpdate });
+};
+
+const deletePlace = (req, res, next) => {
+  const placeId = req.params.placeId;
+  MOCKPLACES = MOCKPLACES.filter((place) => place.id !== placeId);
+
+  res.status(202).json({ message: 'Deleted Place' });
+};
+
 exports.getPlaceById = getPlaceById;
 exports.getPlacesByUserId = getPlacesByUserId;
 exports.createPlace = createPlace;
+exports.updatePlace = updatePlace;
+exports.deletePlace = deletePlace;
