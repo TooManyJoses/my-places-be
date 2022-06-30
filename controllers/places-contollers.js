@@ -31,7 +31,7 @@ const { v4: uuidv4 } = require('uuid');
 const HttpError = require('../models/http-error');
 
 const getPlaceById = (req, res, next) => {
-  const placeId = req.params.placeId;
+  const { placeId } = req.params;
   const place = MOCKPLACES.find((place) => placeId === place.id);
 
   if (!place) {
@@ -42,7 +42,7 @@ const getPlaceById = (req, res, next) => {
 };
 
 const getPlacesByUserId = (req, res, next) => {
-  const userId = req.params.userId;
+  const { userId } = req.params;
   const placesByUser = MOCKPLACES.filter((place) => place.creator === userId);
 
   if (!placesByUser) {
@@ -69,7 +69,7 @@ const createPlace = (req, res, next) => {
 };
 
 const updatePlace = (req, res, next) => {
-  const placeId = req.params.placeId;
+  const { placeId } = req.params;
   const placeToUpdate = { ...MOCKPLACES.find((place) => place.id === placeId) };
   const index = MOCKPLACES.findIndex((place) => place.id === placeId);
 
@@ -82,7 +82,7 @@ const updatePlace = (req, res, next) => {
 };
 
 const deletePlace = (req, res, next) => {
-  const placeId = req.params.placeId;
+  const { placeId } = req.params;
   MOCKPLACES = MOCKPLACES.filter((place) => place.id !== placeId);
 
   res.status(202).json({ message: 'Deleted Place' });
