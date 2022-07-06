@@ -30,6 +30,7 @@ let MOCKPLACES = [
 const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
+const getCoordinatesFromAddress = require('../utils/location');
 
 const getPlaceById = (req, res, next) => {
   const { placeId } = req.params;
@@ -52,13 +53,20 @@ const getPlacesByUserId = (req, res, next) => {
   res.json({ places: placesByUser });
 };
 
-const createPlace = (req, res, next) => {
+const createPlace = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    throw new HttpError(422, 'Invalid Inputs Passed.');
+    next(new HttpError(422, 'Invalid Inputs Passed.'));
   }
 
-  const { title, description, coordinates, address, creator } = req.body;
+  const { title, description, address, creator } = req.body;
+  let coordinates;
+
+  try {
+    coordinates = await getCoordinatesFromAddress(address);
+  } catch (error) {
+    return next(error)
+  }
 
   const newPlace = {
     id: uuidv4(),
@@ -94,8 +102,8 @@ const updatePlace = (req, res, next) => {
 
 const deletePlace = (req, res, next) => {
   const { placeId } = req.params;
-  if(!MOCKPLACES.find((place) => place.id === placeId)) {
-    throw new HttpError(404, 'Could not find place with given id.')
+  if (!MOCKPLACES.find((place) => place.id === placeId)) {
+    throw new HttpError(404, 'Could not find place with given id.');
   }
   MOCKPLACES = MOCKPLACES.filter((place) => place.id !== placeId);
   res.status(202).json({ message: 'Deleted Place' });
