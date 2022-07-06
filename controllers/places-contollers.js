@@ -56,7 +56,6 @@ const createPlace = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new HttpError(422, 'Invalid Inputs Passed.');
-
   }
 
   const { title, description, coordinates, address, creator } = req.body;
@@ -95,8 +94,10 @@ const updatePlace = (req, res, next) => {
 
 const deletePlace = (req, res, next) => {
   const { placeId } = req.params;
+  if(!MOCKPLACES.find((place) => place.id === placeId)) {
+    throw new HttpError(404, 'Could not find place with given id.')
+  }
   MOCKPLACES = MOCKPLACES.filter((place) => place.id !== placeId);
-
   res.status(202).json({ message: 'Deleted Place' });
 };
 

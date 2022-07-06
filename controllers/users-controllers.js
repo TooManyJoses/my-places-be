@@ -14,6 +14,7 @@ let MOCKUSERS = [
 ];
 
 const { v4: uuidv4 } = require('uuid');
+const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
 
 const getUsers = (req, res, next) => {
@@ -34,6 +35,11 @@ const getUserById = (req, res, next) => {
 };
 
 const createUser = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new HttpError(422, 'Invalid Inputs Passed.');
+  }
+
   const { name, email, password } = req.body;
 
   const userExists = MOCKUSERS.find((user) => user.email === email);
