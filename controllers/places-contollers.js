@@ -28,6 +28,7 @@ let MOCKPLACES = [
 ];
 
 const { v4: uuidv4 } = require('uuid');
+const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
 
 const getPlaceById = (req, res, next) => {
@@ -52,6 +53,12 @@ const getPlacesByUserId = (req, res, next) => {
 };
 
 const createPlace = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new HttpError(422, 'Invalid Inputs Passed.');
+
+  }
+
   const { title, description, coordinates, address, creator } = req.body;
 
   const newPlace = {
@@ -69,6 +76,11 @@ const createPlace = (req, res, next) => {
 };
 
 const updatePlace = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new HttpError(422, 'Invalid Inputs Passed.');
+  }
+
   const { placeId } = req.params;
   const placeToUpdate = { ...MOCKPLACES.find((place) => place.id === placeId) };
   const index = MOCKPLACES.findIndex((place) => place.id === placeId);
