@@ -24,26 +24,47 @@ const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
 const getCoordinatesFromAddress = require('../utils/location');
 const Place = require('../models/place');
+const place = require('../models/place');
 
-const getPlaceById = (req, res, next) => {
+const getPlaceById = async (req, res, next) => {
   const { placeId } = req.params;
-  const place = MOCKPLACES.find((place) => placeId === place.id);
+
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError(500, 'Something went wrong.');
+    return next(error);
+  }
 
   if (!place) {
-    throw new HttpError(404, 'No place with provided id exists');
+    const error = new HttpError(404, 'No place with provided id exists');
+    return next(error);
   }
 
-  res.json({ place });
+  res.json({ place: place.toObject({ getters: true }) });
 };
 
-const getPlacesByUserId = (req, res, next) => {
+const getPlacesByUserId = async (req, res, next) => {
   const { userId } = req.params;
-  const placesByUser = MOCKPLACES.filter((place) => place.creator === userId);
+  let placesByUser;
+  try {
+    placesByUser = await Place.find({ creator: userId });
+  } catch (err) {
+    const error = new HttpError(
+      500,
+      'Something went wrong. Could not find place.'
+    );
+    return next(error);
+  }
 
   if (!placesByUser) {
-    throw new HttpError(404, 'No place for provided user id exists');
+    const error = new HttpError(404, 'No place for provided user id exists');
+    return next(error);
   }
-  res.json({ places: placesByUser });
+  res.json({
+    places: placesByUser.map((place) => place.toObject({ getters: true })),
+  });
 };
 
 const createPlace = async (req, res, next) => {
@@ -81,30 +102,66 @@ const createPlace = async (req, res, next) => {
   res.status(201).json({ place: newPlace });
 };
 
-const updatePlace = (req, res, next) => {
+const updatePlace = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new HttpError(422, 'Invalid Inputs Passed.');
   }
 
   const { placeId } = req.params;
-  const placeToUpdate = { ...MOCKPLACES.find((place) => place.id === placeId) };
-  const index = MOCKPLACES.findIndex((place) => place.id === placeId);
+  let placeToUpdate;
+  try {
+    placeToUpdate = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError(
+      500,
+      'Something went wrong. Could not find place.'
+    );
+    return next(error);
+  }
 
   placeToUpdate.title = req.body.title;
   placeToUpdate.description = req.body.description;
 
-  MOCKPLACES[index] = placeToUpdate;
+  try {
+    await placeToUpdate.save();
+  } catch (err) {
+    const error = new HttpError(
+      500,
+      'Something went wrong. COuld not update place.'
+    );
+    return next(error);
+  }
 
-  res.status(200).json({ updatedPlace: placeToUpdate });
+  res.status(200).json({ place: placeToUpdate.toObject({ getters: true }) });
 };
 
-const deletePlace = (req, res, next) => {
+const deletePlace = async (req, res, next) => {
   const { placeId } = req.params;
-  if (!MOCKPLACES.find((place) => place.id === placeId)) {
-    throw new HttpError(404, 'Could not find place with given id.');
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError(
+      500,
+      'Something went wrong. Could not delete place.'
+    );
+    return next(error);
   }
-  MOCKPLACES = MOCKPLACES.filter((place) => place.id !== placeId);
+  if (!place) {
+    const error = new HttpError(404, 'Could not find place with given id.');
+    return next(error);
+  }
+
+  try {
+    await place.remove()
+  } catch (err) {
+    const error = new HttpError(
+      500,
+      'Something went wrong. Could not delete place.'
+    );
+    return next(error);
+  }
   res.status(202).json({ message: 'Deleted Place' });
 };
 
