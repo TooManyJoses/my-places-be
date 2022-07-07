@@ -6,10 +6,6 @@ let MOCKPLACES = [
     imageUrl:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/NYC_Empire_State_Building.jpg/640px-NYC_Empire_State_Building.jpg',
     address: '20 W 34th St, New York, NY 10001',
-    location: {
-      lat: 40.7484405,
-      lng: -73.9878584,
-    },
     creator: 'u1',
   },
   {
@@ -19,10 +15,6 @@ let MOCKPLACES = [
     imageUrl:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/NYC_Empire_State_Building.jpg/640px-NYC_Empire_State_Building.jpg',
     address: '20 W 34th St, New York, NY 10001',
-    location: {
-      lat: 40.7484405,
-      lng: -73.9878584,
-    },
     creator: 'u2',
   },
 ];
@@ -31,6 +23,7 @@ const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
 const getCoordinatesFromAddress = require('../utils/location');
+const Place = require('../models/place');
 
 const getPlaceById = (req, res, next) => {
   const { placeId } = req.params;
@@ -65,19 +58,25 @@ const createPlace = async (req, res, next) => {
   try {
     coordinates = await getCoordinatesFromAddress(address);
   } catch (error) {
-    return next(error)
+    return next(error);
   }
 
-  const newPlace = {
-    id: uuidv4(),
+  const newPlace = new Place({
     title,
     description,
-    location: coordinates,
     address,
+    location: coordinates,
+    image:
+      'https://media.istockphoto.com/photos/bamberg-city-in-germany-town-hall-building-in-background-with-blue-picture-id1215395349?k=20&m=1215395349&s=612x612&w=0&h=r3m5mTYdf_W4AUHTP8pBE5z1r23WKnu9tGGfyRdwFu8=',
     creator,
-  };
+  });
 
-  MOCKPLACES.push(newPlace);
+  try {
+    await newPlace.save();
+  } catch (err) {
+    const error = new HttpError(500, 'Creating place failed. Please try again');
+    return next(error);
+  }
 
   res.status(201).json({ place: newPlace });
 };

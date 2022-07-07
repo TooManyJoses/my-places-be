@@ -29,11 +29,9 @@ app.use((error, req, res, next) => {
     .json({ message: error.message || 'Something went wrong.' });
 });
 
-// mongoose
-//   .connect()
-//   .then(() => {
-//     app.listen(5050);
-//   })
-//   .catch((error) => console.log(error));
-
-  app.listen(5050);
+mongoose
+  .connect(`mongodb+srv://${process.env.MONGOUSERNAME}:${process.env.MONGOPASSWORD}@cluster0.ffvay.mongodb.net/places?retryWrites=true&w=majority`)
+  .then(() => {
+    app.listen(5050);
+  })
+  .catch((error) => console.log(error));
