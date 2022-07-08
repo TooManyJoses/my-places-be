@@ -4,7 +4,7 @@ const HttpError = require('../models/http-error');
 const getCoordinatesFromAddress = require('../utils/location');
 const Place = require('../models/place');
 const User = require('../models/user');
-const { default: mongoose } = require('mongoose');
+const mongoose = require('mongoose');
 
 const getPlaceById = async (req, res, next) => {
   const { placeId } = req.params;
@@ -139,7 +139,7 @@ const deletePlace = async (req, res, next) => {
   const { placeId } = req.params;
   let place;
   try {
-    place = await Place.findById(placeId);
+    place = await Place.findById(placeId).populate('creator');
   } catch (err) {
     const error = new HttpError(
       500,
@@ -147,13 +147,19 @@ const deletePlace = async (req, res, next) => {
     );
     return next(error);
   }
+
   if (!place) {
     const error = new HttpError(404, 'Could not find place with given id.');
     return next(error);
   }
 
   try {
-    await place.remove();
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await place.remove({ session });
+    place.creator.places.pull(place);
+    await place.creator.save({ session });
+    await session.commitTransaction();
   } catch (err) {
     const error = new HttpError(
       500,
