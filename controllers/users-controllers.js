@@ -16,62 +16,96 @@ let MOCKUSERS = [
 const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
+const User = require('../models/user');
 
-const getUsers = (req, res, next) => {
-  const sendUsers = MOCKUSERS.map(({ password, ...rest }) => ({ ...rest }));
-  res.status(200).json({ users: sendUsers });
+const getUsers = async (req, res, next) => {
+  let users;
+  try {
+    users = await User.find({}, '-password');
+  } catch (err) {
+    const error = new HttpError(500, 'Server Error');
+    return next(error);
+  }
+  res.status(200).json({ users: users.map((user) => user.toObject({ getters: true })) });
 };
 
-const getUserById = (req, res, next) => {
+const getUserById = async (req, res, next) => {
   const { userId } = req.params;
-  const sendUser = MOCKUSERS.find((user) => user.id === userId);
+
+  let sendUser;
+  try {
+    sendUser = await User.findById(userId, '-password');
+  } catch (err) {
+    const error = new HttpError(500, 'Server Error');
+    return next(error);
+  }
 
   if (!sendUser) {
-    throw new HttpError(404, 'No user with provided id exists');
+    const err = HttpError(404, 'No user with provided id exists');
+    return next(err);
   }
 
-  delete sendUser.password;
-  res.status(200).json({ user: sendUser });
+  // delete sendUser.password;
+  console.log('sendUsersendUsersendUsersendUsersendUsersendUsersendUsersendUsersendUsersendUser', sendUser)
+  res.status(200).json({ user: sendUser.toObject({ getters: true })});
 };
 
-const createUser = (req, res, next) => {
+const createUser = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    throw new HttpError(422, 'Invalid Inputs Passed.');
+    const err = HttpError(422, 'Invalid Inputs Passed.');
+    return next(err);
   }
 
-  const { name, email, password } = req.body;
+  const { name, email, password, places } = req.body;
 
-  const userExists = MOCKUSERS.find((user) => user.email === email);
-
-  if (userExists) {
-    throw new HttpError(422, 'Email already registered');
+  let existingUser;
+  try {
+    existingUser = await User.findOne({ email });
+  } catch (err) {
+    const error = new HttpError(500, 'Signing up failed.');
+    return next(error);
   }
 
-  const newUser = {
-    id: uuidv4(),
+  if (existingUser) {
+    const error = new HttpError(422, 'User exists already.');
+    return next(error);
+  }
+
+  const newUser = new User({
     name,
     email,
     password,
-  };
+    image: 'https://avatars.githubusercontent.com/u/80218937?v=4',
+    places,
+  });
 
-  MOCKUSERS.push(newUser);
-  res.status(200).json({ message: 'User saved', newUser });
+  try {
+    await newUser.save();
+  } catch (err) {
+    const error = new HttpError(500, 'Sign up failed. Please try again');
+    return next(error);
+  }
+  res.status(201).json({ user: newUser.toObject({ getters: true }) });
 };
 
-const loginUser = (req, res, next) => {
+const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
 
-  const userToLogin = MOCKUSERS.find(
-    (user) => user.email === email && user.password === password
-  );
-
-  if (!userToLogin) {
-    throw new HttpError(401, 'Username and password do not match');
+  let userToLogin;
+  try {
+    userToLogin = await User.findOne({ email });
+  } catch (err) {
+    const error = new HttpError(500, 'Logging up failed.');
+    return next(error);
   }
 
-  delete userToLogin.password;
-  res.status(200).json({ user: userToLogin });
+  if (!userToLogin || userToLogin.password !== password) {
+    const error = new HttpError(401, 'Invalid credentials. Could not log in.');
+    return next(error);
+  }
+
+  res.status(200).json({ message: 'logged in' });
 };
 
 exports.getUsers = getUsers;

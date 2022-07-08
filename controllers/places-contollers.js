@@ -1,30 +1,8 @@
-let MOCKPLACES = [
-  {
-    id: 'p1',
-    title: 'Empire State Building',
-    description: 'One of the most famous sky scrapers in the world!',
-    imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/NYC_Empire_State_Building.jpg/640px-NYC_Empire_State_Building.jpg',
-    address: '20 W 34th St, New York, NY 10001',
-    creator: 'u1',
-  },
-  {
-    id: 'p2',
-    title: 'Empire State Building',
-    description: 'One of the most famous sky scrapers in the world!',
-    imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/NYC_Empire_State_Building.jpg/640px-NYC_Empire_State_Building.jpg',
-    address: '20 W 34th St, New York, NY 10001',
-    creator: 'u2',
-  },
-];
-
 const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
 const getCoordinatesFromAddress = require('../utils/location');
 const Place = require('../models/place');
-const place = require('../models/place');
 
 const getPlaceById = async (req, res, next) => {
   const { placeId } = req.params;
@@ -105,7 +83,8 @@ const createPlace = async (req, res, next) => {
 const updatePlace = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    throw new HttpError(422, 'Invalid Inputs Passed.');
+    const err = HttpError(422, 'Invalid Inputs Passed.');
+    return next(err);
   }
 
   const { placeId } = req.params;
