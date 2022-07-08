@@ -57,7 +57,7 @@ const createUser = async (req, res, next) => {
     return next(err);
   }
 
-  const { name, email, password, places } = req.body;
+  const { name, email, password } = req.body;
 
   let existingUser;
   try {
@@ -77,7 +77,7 @@ const createUser = async (req, res, next) => {
     email,
     password,
     image: 'https://avatars.githubusercontent.com/u/80218937?v=4',
-    places,
+    places: [],
   });
 
   try {

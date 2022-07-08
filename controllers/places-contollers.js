@@ -3,6 +3,8 @@ const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
 const getCoordinatesFromAddress = require('../utils/location');
 const Place = require('../models/place');
+const User = require('../models/user');
+const { default: mongoose } = require('mongoose');
 
 const getPlaceById = async (req, res, next) => {
   const { placeId } = req.params;
@@ -70,8 +72,26 @@ const createPlace = async (req, res, next) => {
     creator,
   });
 
+  let user;
   try {
-    await newPlace.save();
+    user = await User.findById(creator);
+  } catch (err) {
+    const error = new HttpError(500, 'Creating place failed. Please try again');
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new HttpError(404, 'User not found');
+    return next(error);
+  }
+
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await newPlace.save({ session });
+    user.places.push(newPlace);
+    await user.save({ session });
+    await session.commitTransaction();
   } catch (err) {
     const error = new HttpError(500, 'Creating place failed. Please try again');
     return next(error);
@@ -133,7 +153,7 @@ const deletePlace = async (req, res, next) => {
   }
 
   try {
-    await place.remove()
+    await place.remove();
   } catch (err) {
     const error = new HttpError(
       500,
