@@ -1,4 +1,3 @@
-const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
 const getCoordinatesFromAddress = require('../utils/location');
@@ -27,23 +26,28 @@ const getPlaceById = async (req, res, next) => {
 
 const getPlacesByUserId = async (req, res, next) => {
   const { userId } = req.params;
-  let placesByUser;
+
+  let userWithPlaces;
   try {
-    placesByUser = await Place.find({ creator: userId });
+    userWithPlaces = await User.findById(userId).populate('places');
   } catch (err) {
     const error = new HttpError(
       500,
-      'Something went wrong. Could not find place.'
+      'Fetching places failed, please try again later'
     );
     return next(error);
   }
 
-  if (!placesByUser) {
-    const error = new HttpError(404, 'No place for provided user id exists');
-    return next(error);
+  if (!userWithPlaces || userWithPlaces.places.length === 0) {
+    return next(
+      new HttpError(404, 'Could not find places for the provided user id.')
+    );
   }
+
   res.json({
-    places: placesByUser.map((place) => place.toObject({ getters: true })),
+    places: userWithPlaces.places.map(place =>
+      place.toObject({ getters: true })
+    )
   });
 };
 

@@ -1,19 +1,3 @@
-let MOCKUSERS = [
-  {
-    id: 'u1',
-    name: 'Henry Oak',
-    email: 'OakMaster@yahoo.com',
-    password: 'Ga1a!',
-  },
-  {
-    id: 'u2',
-    name: 'Sparky the dog',
-    email: 'sparks@gooddog.com',
-    password: 'bone123',
-  },
-];
-
-const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
 const User = require('../models/user');
