@@ -9,6 +9,7 @@ const {
   createUser,
   loginUser,
 } = require('../controllers/users-controllers');
+const fileUpload = require('../middleware/file-upload');
 
 router.get('/', getUsers);
 
@@ -16,6 +17,7 @@ router.get('/:userId', getUserById);
 
 router.post(
   '/signup',
+  fileUpload.single('image'),
   [
     check('name').not().isEmpty(),
     check('email').normalizeEmail().isEmail(),
