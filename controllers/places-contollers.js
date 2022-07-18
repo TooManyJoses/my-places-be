@@ -45,9 +45,9 @@ const getPlacesByUserId = async (req, res, next) => {
   }
 
   res.json({
-    places: userWithPlaces.places.map(place =>
+    places: userWithPlaces.places.map((place) =>
       place.toObject({ getters: true })
-    )
+    ),
   });
 };
 
@@ -71,14 +71,14 @@ const createPlace = async (req, res, next) => {
     description,
     address,
     location: coordinates,
-    image:
-      'https://media.istockphoto.com/photos/bamberg-city-in-germany-town-hall-building-in-background-with-blue-picture-id1215395349?k=20&m=1215395349&s=612x612&w=0&h=r3m5mTYdf_W4AUHTP8pBE5z1r23WKnu9tGGfyRdwFu8=',
+    image: req.file.path,
     creator,
   });
 
   let user;
   try {
     user = await User.findById(creator);
+    console.log('user', user);
   } catch (err) {
     const error = new HttpError(500, 'Creating place failed. Please try again');
     return next(error);

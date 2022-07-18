@@ -10,7 +10,9 @@ const getUsers = async (req, res, next) => {
     const error = new HttpError(500, 'Server Error');
     return next(error);
   }
-  res.status(200).json({ users: users.map((user) => user.toObject({ getters: true })) });
+  res
+    .status(200)
+    .json({ users: users.map((user) => user.toObject({ getters: true })) });
 };
 
 const getUserById = async (req, res, next) => {
@@ -29,12 +31,10 @@ const getUserById = async (req, res, next) => {
     return next(err);
   }
 
-  // delete sendUser.password;
-  console.log('sendUsersendUsersendUsersendUsersendUsersendUsersendUsersendUsersendUsersendUser', sendUser)
-  res.status(200).json({ user: sendUser.toObject({ getters: true })});
+  res.status(200).json({ user: sendUser.toObject({ getters: true }) });
 };
 
-const createUser = async (req, res, next) => {
+const signUpUser = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const err = HttpError(422, 'Invalid Inputs Passed.');
@@ -60,7 +60,7 @@ const createUser = async (req, res, next) => {
     name,
     email,
     password,
-    image: 'https://avatars.githubusercontent.com/u/80218937?v=4',
+    image: req.file.path,
     places: [],
   });
 
@@ -89,10 +89,15 @@ const loginUser = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(200).json({ message: 'logged in', user: userToLogin.toObject({ getters: true }) });
+  res
+    .status(200)
+    .json({
+      message: 'logged in',
+      user: userToLogin.toObject({ getters: true }),
+    });
 };
 
 exports.getUsers = getUsers;
 exports.getUserById = getUserById;
-exports.createUser = createUser;
+exports.signUpUser = signUpUser;
 exports.loginUser = loginUser;

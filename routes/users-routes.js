@@ -6,7 +6,7 @@ const router = express.Router();
 const {
   getUsers,
   getUserById,
-  createUser,
+  signUpUser,
   loginUser,
 } = require('../controllers/users-controllers');
 const fileUpload = require('../middleware/file-upload');
@@ -23,7 +23,7 @@ router.post(
     check('email').normalizeEmail().isEmail(),
     check('password').isLength({ min: 8 }),
   ],
-  createUser
+  signUpUser
 );
 
 router.post('/login', loginUser);
