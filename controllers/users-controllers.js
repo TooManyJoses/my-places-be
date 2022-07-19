@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const HttpError = require('../models/http-error');
 const User = require('../models/user');
 
@@ -79,7 +80,25 @@ const signUpUser = async (req, res, next) => {
     const error = new HttpError(500, 'Sign up failed. Please try again');
     return next(error);
   }
-  res.status(201).json({ user: newUser.toObject({ getters: true }) });
+
+  let token;
+  try {
+    token = jwt.sign(
+      {
+        userId: newUser.id,
+        email: newUser.email,
+      },
+      'frábær_leyndarmál_ekki_deila',
+      {
+        expiresIn: '2h',
+      }
+    );
+  } catch (err) {
+    const error = new HttpError(500, 'Sign up failed. Please try again');
+    return next(error);
+  }
+
+  res.status(201).json({ userId: newUser.id, email: newUser.email, token });
 };
 
 const loginUser = async (req, res, next) => {
@@ -100,15 +119,39 @@ const loginUser = async (req, res, next) => {
 
   let isValidPassword = false;
   try {
-    isValidPassword = await bcrypt.compare(password, 13);
+    isValidPassword = await bcrypt.compare(password, userToLogin.password);
   } catch (err) {
-    const error = new HttpError(500, 'Could not create user. Please try again');
+    const error = new HttpError(500, 'Could not log you in. Please try again');
+    return next(error);
+  }
+
+  if (!isValidPassword) {
+    const error = new HttpError(401, 'Invalid credentials. Could not log in.');
+    return next(error);
+  }
+
+  let token;
+  try {
+    token = jwt.sign(
+      {
+        userId: userToLogin.id,
+        email: userToLogin.email,
+      },
+      'frábær_leyndarmál_ekki_deila',
+      {
+        expiresIn: '2h',
+      }
+    );
+  } catch (err) {
+    const error = new HttpError(500, 'Sign up failed. Please try again');
     return next(error);
   }
 
   res.status(200).json({
     message: 'logged in',
-    user: userToLogin.toObject({ getters: true }),
+    userId: userToLogin.id,
+    email: userToLogin.email,
+    token,
   });
 };
 
