@@ -39,7 +39,7 @@ const getPlacesByUserId = async (req, res, next) => {
     return next(error);
   }
 
-  if (!userWithPlaces || userWithPlaces.places.length === 0) {
+  if (!userWithPlaces) {
     return next(
       new HttpError(404, 'Could not find places for the provided user id.')
     );
@@ -123,6 +123,14 @@ const updatePlace = async (req, res, next) => {
     return next(error);
   }
 
+  if (placeToUpdate.creator.toString() !== req.userData.userId) {
+    const error = new HttpError(
+      401,
+      'You are not authorized to edit this place.'
+    );
+    return next(error);
+  }
+
   placeToUpdate.title = req.body.title;
   placeToUpdate.description = req.body.description;
 
@@ -154,6 +162,14 @@ const deletePlace = async (req, res, next) => {
 
   if (!place) {
     const error = new HttpError(404, 'Could not find place with given id.');
+    return next(error);
+  }
+
+  if (place.creator.id !== req.userData.userId) {
+    const error = new HttpError(
+      401,
+      'You are not authorized to delete this place.'
+    );
     return next(error);
   }
 
