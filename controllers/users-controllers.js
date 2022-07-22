@@ -80,7 +80,7 @@ const signUpUser = async (req, res, next) => {
     const error = new HttpError(500, 'Sign up failed. Please try again');
     return next(error);
   }
-
+  console.log('jwt key', process.env.JWT_KEY)
   let token;
   try {
     token = jwt.sign(
@@ -88,7 +88,7 @@ const signUpUser = async (req, res, next) => {
         userId: newUser.id,
         email: newUser.email,
       },
-      'frábær_leyndarmál_ekki_deila',
+      process.env.JWT_KEY,
       {
         expiresIn: '2h',
       }
@@ -137,7 +137,7 @@ const loginUser = async (req, res, next) => {
         userId: userToLogin.id,
         email: userToLogin.email,
       },
-      'frábær_leyndarmál_ekki_deila',
+      process.env.JWT_KEY,
       {
         expiresIn: '2h',
       }

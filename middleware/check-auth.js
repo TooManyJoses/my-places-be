@@ -11,7 +11,7 @@ module.exports = (req, res, next) => {
       const error = new HttpError(403, 'Invalid Token.');
       return next(error);
     }
-    const decodedToken = jwt.verify(token, 'frábær_leyndarmál_ekki_deila');
+    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
     req.userData = { userId: decodedToken.userId };
     next();
   } catch (err) {

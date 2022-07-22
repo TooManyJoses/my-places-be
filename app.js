@@ -49,7 +49,7 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(
-    `mongodb+srv://${process.env.MONGOUSERNAME}:${process.env.MONGOPASSWORD}@cluster0.ffvay.mongodb.net/places?retryWrites=true&w=majority`
+    `mongodb+srv://${process.env.MONGOUSERNAME}:${process.env.MONGOPASSWORD}@cluster0.ffvay.mongodb.net/${process.env.MONGODBNAME}?retryWrites=true&w=majority`
   )
   .then(() => {
     app.listen(5050);
