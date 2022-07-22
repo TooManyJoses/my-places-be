@@ -52,6 +52,6 @@ mongoose
     `mongodb+srv://${process.env.MONGOUSERNAME}:${process.env.MONGOPASSWORD}@cluster0.ffvay.mongodb.net/${process.env.MONGODBNAME}?retryWrites=true&w=majority`
   )
   .then(() => {
-    app.listen(5050);
+    app.listen(process.env.PORT || 5050);
   })
   .catch((error) => console.log(error));
